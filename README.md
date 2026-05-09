@@ -113,39 +113,45 @@ flowchart TB
   SCENES --> VIEW([360° viewer with forward/back scenes])
 ```
 
+## Prerequisites
+
+- **QGIS 3.x** with Python enabled  
+- **Shapefile** (or compatible OGR source) of **point** features with at least:
+  - `Name` — panorama filename  
+  - `Azimuth` — numeric heading in degrees  
+- **Folder** of equirectangular images whose filenames match `Name`  
+- **Google Chrome** at the default path in `PanoStreetView_2.py` (or adjust `chrome_path`)  
 
 
 ---
 
-## Data contracts (JSON)
+## How to Install
 
-These files are the **interface** between the Python pipeline and the web client.
+To install the plugin manually:
 
-### `azimuth_data.json` (single object)
+1. Download the ZIP file from this repository.
+2. Open QGIS.
+3. Go to: `Plugins` → `Manage and Install Plugins` → `Install from ZIP`.
+4. Select the downloaded ZIP file and install it.
 
-Written on each successful map interaction. Drives which panorama is “current” and how Pannellum should orient.
+<img width="647" height="308" alt="image" src="https://github.com/user-attachments/assets/b37e33cd-2678-4244-a862-c9ca50e20a10" />
 
-| Field | Type | Role |
-|--------|------|------|
-| `index` | int | Feature id / key aligned with shapefile lookup |
-| `azimuth` | float | Stored heading from GIS attributes |
-| `yaw_value` | float | Computed viewer yaw: user bearing minus azimuth |
+## Usage
 
-### `Image_to_copy.json` (array)
+To use this plugin:
 
-Neighbor set for scene-to-scene navigation. Each element includes image name, azimuth, and coordinates string for traceability.
-
-| Field | Type | Role |
-|--------|------|------|
-| `row` | int | Ordinal in the exported batch |
-| `index` | int | Feature id |
-| `point_name` | string | Filename served under `/images/` |
-| `azimuth` | float | Heading metadata |
-| `coordinates` | string | Lat/lon-style pair (as serialized in plugin) |
-
-> **Note:** The helper is named `next_11_images` in code, but the spatial query uses `nearestNeighbor(..., 3)`—i.e. **k nearest neighbors** for the exported set. Update `k` if you need a wider corridor of scenes.
-
+1. Ensure your panoramic images are **geotagged** and stored in a folder (preferably `.JPG` in equi-rectangular projection).
+2. Create or load photo points in a **shapefile** (EPSG:4326 recommended) that contains:
+   - A `Name` field matching each image filename.
+   - Accurate coordinates for each photo location.
+   - You can use the QGIS plugin **ImportPhotos** (available in the QGIS plugin repository) to generate this layer.
 ---
+<img width="1919" height="1030" alt="image-1" src="https://github.com/user-attachments/assets/7c29808c-2e59-4f26-a704-d28de0550f45" />
+
+## Output preview
+
+<img width="1771" height="658" alt="image-2" src="https://github.com/user-attachments/assets/42df9a5d-2001-4881-922a-350f5b38b7f1" />
+
 
 ## Tech stack
 
@@ -156,38 +162,7 @@ Neighbor set for scene-to-scene navigation. Each element includes image name, az
 
 ---
 
-## Prerequisites
 
-- **QGIS 3.x** with Python enabled  
-- **Shapefile** (or compatible OGR source) of **point** features with at least:
-  - `Name` — panorama filename  
-  - `Azimuth` — numeric heading in degrees  
-- **Folder** of equirectangular images whose filenames match `Name`  
-- **Google Chrome** at the default path in `PanoStreetView_2.py` (or adjust `chrome_path`)  
-
----
-
-## How to run (high level)
-
-1. Copy the plugin folder into your QGIS profile plugins directory (see QGIS docs for plugin paths).  
-2. Enable **PanoStreetView_2** in the Plugin Manager.  
-3. Open the plugin, select the **shapefile** and **images directory**, then run **index build** (progress bar).  
-4. Click the map and **drag a line** indicating viewing direction; release to trigger lookup, JSON write, server start, and browser launch.  
-
----
-
-## Repository layout (selected)
-
-| Path | Purpose |
-|------|---------|
-| `PanoStreetView_2.py` | Plugin entry, spatial indexing, map tool, HTTP daemon, JSON writers |
-| `PanoStreetView_2_dialog.py` | Configuration UI wiring |
-| `index_view.html` | Client: loads JSON, builds Pannellum configuration |
-| `index_error.html` | Fallback UI when imagery path is wrong |
-| `azimuth_data.json` / `Image_to_copy.json` | Runtime artifacts (overwritten per interaction) |
-| `metadata.txt` | QGIS plugin metadata |
-
----
 
 ## Author
 
