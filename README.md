@@ -6,9 +6,9 @@ This repository is framed as a **small end-to-end data pipeline**: spatially ind
 
 ---
 
-## Why this belongs in a data engineering portfolio
+## Core Data flows
 
-| Theme | How this project shows it |
+| Theme | Functionality |
 |--------|---------------------------|
 | **Data sources** | Vector layer (shapefile) + filesystem imagery; explicit attribute contract (`Name`, `Azimuth`). |
 | **Performance** | Pre-built **spatial index** (`QgsSpatialIndex`) for nearest-neighbor queries instead of full scans. |
@@ -20,9 +20,8 @@ This repository is framed as a **small end-to-end data pipeline**: spatially ind
 
 ---
 
-## Pipeline flow (PNG — download / embed)
+## Pipeline flow
 
-Static diagram for slides, LinkedIn, or README previews. **File in repo:** [`pipeline-flow-diagram.png`](pipeline-flow-diagram.png) — on GitHub, open that file and use **Download raw file** (or clone the repo and copy the PNG from the project root).
 
 ![PanoStreetView pipeline — sources → QGIS → JSON → HTTP → Pannellum](pipeline-flow-diagram.png)
 
@@ -114,39 +113,7 @@ flowchart TB
   SCENES --> VIEW([360° viewer with forward/back scenes])
 ```
 
-### Sequence diagram (click → view)
 
-```mermaid
-sequenceDiagram
-  participant U as User
-  participant Q as QGIS / PointTool
-  participant N as NearestPointFinder
-  participant F as Filesystem JSON
-  participant H as HTTPServer :8030
-  participant B as Browser + Pannellum
-
-  U->>Q: Click + drag bearing line
-  Q->>Q: Compute angle; transform CRS as needed
-  Q->>N: find_nearest_point_with_image(coords)
-  N->>N: spatialIndex.nearestNeighbor(n=1)
-  N-->>Q: feature id, image Name, Azimuth
-
-  Q->>N: next_11_images(coords)
-  N->>N: nearestNeighbor(n=k); sort ids
-  N->>F: overwrite Image_to_copy.json
-
-  Q->>F: overwrite azimuth_data.json
-  Q->>H: Start thread; serve plugin + /images alias
-  Q->>B: Open index_view.html
-
-  B->>H: GET azimuth_data.json
-  B->>H: GET Image_to_copy.json
-  H-->>B: JSON payloads
-
-  B->>B: Match index; build scenes; init viewer
-  B->>H: GET /images/{point_name}
-  H-->>B: Equirectangular image bytes
-```
 
 ---
 
@@ -222,28 +189,6 @@ Neighbor set for scene-to-scene navigation. Each element includes image name, az
 
 ---
 
-## Honest scope & how to extend it (for interviews)
-
-**What this is:** A focused **interactive GIS-to-web** pipeline with clear separation between **indexed spatial data**, **derived JSON contracts**, and a **minimal static asset server**.
-
-**Credibly “data engineering” next steps** you could describe or implement:
-
-- Promote JSON to a **document store** or **object storage** with versioning and partitions by survey/date  
-- Replace ad hoc filenames with **manifest files** (e.g. Parquet sidecars for attributes + URIs)  
-- Add **Airflow / Dagster** job to build the spatial index and validate schemas offline  
-- Containerize the viewer + a **nginx** static layer; parameterize `chrome_path` and port  
-- Unit tests for **bearing → yaw** math and **JSON schema** validation (e.g. `jsonschema`)  
-
----
-
-## License
-
-This plugin follows the **GNU General Public License v2** (or later) as indicated in the source headers. See individual files for copyright lines.
-
----
-
 ## Author
 
-**Sachin Kulal** — geospatial & data-oriented tooling; portfolio piece demonstrating pipeline thinking from **source → index → transform → serve → consume**.
-
-If you use this in applications, be ready to explain trade-offs: embedded HTTP server vs dedicated infra, shapefile vs PostGIS for production, and how you would harden schema and observability for a team environment.
+**Sachin Kulal** — geospatial & data-oriented | R&D
