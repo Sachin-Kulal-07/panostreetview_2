@@ -1,0 +1,5 @@
+<RCC>
+    <qresource prefix="/plugins/PanoStreetView_2" >
+        <file>icon.png</file>
+    </qresource>
+</RCC>

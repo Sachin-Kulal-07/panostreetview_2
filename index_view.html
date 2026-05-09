@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Panoramic Street View</title>
+    <!-- Include Pannellum CSS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/pannellum@2.5.6/build/pannellum.css"/>
+    <style>
+    body{
+        margin: 0;
+    }
+    .pnlm-hotspot.pnlm-bookmark-hotspot {
+        display: none; /* Hide the bookmark hotspot */
+    }
+    #panorama {
+        width: 100%;
+        height: 100vh;
+    }
+    </style>
+</head>
+<body>
+    <!-- Container for the panorama viewer -->
+    <div id="panorama"></div>
+
+    <!-- Include Pannellum JavaScript -->
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/pannellum@2.5.6/build/pannellum.js"></script>
+
+    <script>
+        // Function to fetch and parse JSON file
+        async function fetchData(url) {
+            try {
+                const response = await fetch(url);
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                return await response.json();
+            } catch (error) {
+                console.error('There was a problem with your fetch operation:', error);
+            }
+        }
+        // Function to update URL with point_name parameter
+        function updateURL(pointName) {
+            const url = new URL(window.location.href);
+            url.searchParams.set('point_name', encodeURIComponent(pointName));
+            window.history.replaceState({}, document.title, url);
+        }
+
+        // Function to populate scenes based on JSON data
+        function populateScenes(data, startIndex, yawValue) {
+            const scenes = {};
+            for (let i = 0; i < data.length; i++) {
+                const sceneId = `Scene_${i}`;
+                const dataIndex = (startIndex + i) % data.length;
+                const imageData = data[dataIndex];
+                const panoramaPath = `/images/${imageData.point_name}`;
+                console.log("panoramaPath", panoramaPath)
+                scenes[sceneId] = {
+                    title: sceneId + " - " + imageData.point_name,
+                    "autoLoad": true, // Auto-load the first scene,
+                    "northOffset": imageData.azimuth,
+                    "compass": true,
+                    "yaw": yawValue,
+                    hfov: 110,
+                    type: "equirectangular",
+                    panorama: panoramaPath,
+                    hotSpots: [
+                        {
+                            yaw: 0,
+                            pitch: 0,
+                            type: "scene",
+                            sceneId: `Scene_${(i + 1) % data.length}`,
+                            targetYaw: "same", // or "sameAzimuth"
+                            targetPitch: "same",
+                            targetHfov: "same",
+                            handleClick: function() {
+                            updateURL(imageData.point_name);
+                        }
+                        },
+                        {
+                            yaw: 180,
+                            pitch: 0,
+                            type: "scene",
+                            sceneId: `Scene_${(i - 1 + data.length) % data.length}`,
+                            targetYaw: "same", // or "sameAzimuth"
+                            targetPitch: "same",
+                            targetHfov: "same",
+                            handleClick: function() {
+                            updateURL(imageData.point_name);
+                        }
+                        }
+                    ]
+                };
+            }
+            return scenes;
+        }
+
+        // Call the function to display data when the page loads
+        window.onload = async function() {
+            try {
+                const [azimuthData, nearFeatureData] = await Promise.all([
+                    fetchData('azimuth_data.json'),
+                    fetchData('Image_to_copy.json')
+                ]);
+                console.log("azimuthData", azimuthData)
+                console.log("nearFeatureData", nearFeatureData)
+                const foundItem = nearFeatureData.find(item => item.index === azimuthData.index);
+                const yawValue = azimuthData.yaw_value;
+                if (foundItem) {
+                    const startIndex = nearFeatureData.findIndex(item => item.index === azimuthData.index);
+                    console.log("startIndex", startIndex)
+                    console.log("azimuthData.index", azimuthData.index)
+                    const scenes = populateScenes(nearFeatureData, startIndex, yawValue);
+                    pannellum.viewer('panorama', {
+                        "default": {
+                            "firstScene": `Scene_${0}`,
+                            "sceneFadeDuration": 1000
+                        },
+                        "scenes": scenes
+                    });
+                    // Modify the URL
+                    const currentUrl = window.location.href;
+                    const urlWithPointName = currentUrl + "?Initial_image_name=" + encodeURIComponent(foundItem.point_name);
+                    window.history.replaceState({}, document.title, urlWithPointName);
+                } else {
+                    console.log("Item with index", azimuthData.index, "not found in nearFeatureData.");
+                }
+            } catch (error) {
+                console.error('An error occurred while loading data:', error);
+            }
+        };
+    </script>
+</body>
+</html>
