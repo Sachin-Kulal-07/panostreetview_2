@@ -4,6 +4,8 @@
 
 This repository is framed as a **small end-to-end data pipeline**: spatially indexed GIS features drive runtime JSON contracts, a lightweight HTTP serving layer exposes assets and metadata, and a web client (Pannellum) consumes those contracts for visualization. It demonstrates skills that transfer directly to data engineering—**source integration, indexing for low-latency lookup, deterministic transformations, schema-like payloads, and operational glue between batch and interactive workloads**.
 
+![Panoramic 360 view](panoramic_navigation_v3.gif)
+
 ---
 
 ## Core Data flows
@@ -151,8 +153,6 @@ To use this plugin:
 ## Output preview
 
 <img width="1771" height="658" alt="image-2" src="https://github.com/user-attachments/assets/42df9a5d-2001-4881-922a-350f5b38b7f1" />
-
-![Panoramic 360 view](panoramic_navigation_v3.gif)
 
 ## Tech stack
 
