@@ -152,6 +152,7 @@ To use this plugin:
 
 <img width="1771" height="658" alt="image-2" src="https://github.com/user-attachments/assets/42df9a5d-2001-4881-922a-350f5b38b7f1" />
 
+![Panoramic 360 view](panoramic_navigation_v3.gif)
 
 ## Tech stack
 
